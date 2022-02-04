@@ -19,7 +19,7 @@ W112.03.50.103
 """
 
 
-def dd2dms(decimal_deg, islon):
+def dd2dms(decimal_deg: float, islon: bool) -> str:
     """
     Convert Decimal into SCT2 DMS format.
 
@@ -33,12 +33,12 @@ def dd2dms(decimal_deg, islon):
     sd = (md - m) * 60
     sd = round(sd, 3)
 
-    formated_sd = str(int(sd)).zfill(2)
+    formatted_sd = str(int(sd)).zfill(2)
     try:
-        formated_sd = formated_sd + "." + '{:<03d}'.format(int(str(sd).split('.')[1]))
+        formatted_sd = formatted_sd + "." + '{:<03d}'.format(int(str(sd).split('.')[1]))
     except IndexError:
         print(F"***************** {decimal_deg} {islon} ******************")
-        formated_sd = formated_sd + "." + "000"
+        formatted_sd = formatted_sd + "." + "000"
 
     if islon:
         if d >= 0:
@@ -51,10 +51,11 @@ def dd2dms(decimal_deg, islon):
         else:
             d = "S" + str(d)[1:].zfill(3)
 
-    return [str(d), str(m).zfill(2), formated_sd]
+    # return [str(d), str(m).zfill(2), formatted_sd]
+    return '{}.{}.{}'.format(str(d), str(m).zfill(2), formatted_sd)
 
 
-def dms2dd(dms_deg):
+def dms2dd(dms_deg: str) -> float:
     """
     Convert a DMS to Decimal.
 
@@ -74,56 +75,45 @@ def dms2dd(dms_deg):
     return dd
 
 
-def convertXML(full_file_path):
+def convert_xml_file(xml_file_path: str, out_file_path: str = "xml_converted_output.sct2") -> None:
     """
-    Convert a XML file to SCT2 Files.
+    Convert an XML file to SCT2 Files.
 
-    :param full_file_path: full file path for xml file.
+    :param out_file_path: output file path for the created sct2 file.
+    :param xml_file_path: full file path for xml file.
     :return: nothing.
     """
-    with open(full_file_path, 'r') as xml_file:
+    with open(xml_file_path, 'r') as xml_file:
         xml_lines = xml_file.readlines()
 
-    with open('xml_converted_output.sct2', 'w') as output_file:
-        with open('log.txt', 'w') as logFile:
-            output_file.write(HEADER)
-            for line in xml_lines:
-                if "Description=" in line:
-                    name = line[line.index("Description=\"") + len("Description=\""):].split('"')[0]
-                    output_file.write(name + (' ' * (26 - len(name))) + BLANK_COORDS + "\n")
+    with open(out_file_path, 'w') as output_file:
+        output_file.write(HEADER)
+        for line in xml_lines:
+            if "Description=" in line:
+                name = line[line.index("Description=\"") + len("Description=\""):].split('"')[0]
+                output_file.write(name + (' ' * (26 - len(name))) + BLANK_COORDS + "\n")
 
-                if "type=\"Line\"" in line:
-                    # logFile.write("\n"+line.strip()+'\n')
+            if "type=\"Line\"" in line:
+                start_lat = float(line[line.index("StartLat=\"") + len("StartLat=\""):].split('"')[0])
+                start_lat = dd2dms(start_lat, False)
 
-                    startLat = float(line[line.index("StartLat=\"") + len("StartLat=\""):].split('"')[0])
-                    logFile.write(f'\t StartLat: {startLat} -> ')
-                    startLat = ".".join(dd2dms(startLat, False))
-                    logFile.write(f'{startLat}\n')
+                start_lon = float(line[line.index("StartLon=\"") + len("StartLon=\""):].split('"')[0])
+                start_lon = dd2dms(start_lon, True)
 
-                    startLon = float(line[line.index("StartLon=\"") + len("StartLon=\""):].split('"')[0])
-                    logFile.write(f'\t StartLon: {startLon} -> ')
-                    startLon = ".".join(dd2dms(startLon, True))
-                    logFile.write(f'{startLon}\n')
+                end_lat = float(line[line.index("EndLat=\"") + len("EndLat=\""):].split('"')[0])
+                end_lat = dd2dms(end_lat, False)
 
-                    endLat = float(line[line.index("EndLat=\"") + len("EndLat=\""):].split('"')[0])
-                    logFile.write(f'\t EndLat: {endLat} -> ')
-                    endLat = ".".join(dd2dms(endLat, False))
-                    logFile.write(f'{endLat}\n')
+                end_lon = float(line[line.index("EndLon=\"") + len("EndLon=\""):].split('"')[0])
+                end_lon = dd2dms(end_lon, True)
 
-                    endLon = float(line[line.index("EndLon=\"") + len("EndLon=\""):].split('"')[0])
-                    logFile.write(f'\t EndLon: {endLon} -> ')
-                    endLon = ".".join(dd2dms(endLon, True))
-                    logFile.write(f'{endLon}\n')
-                    logFile.write((' ' * 26) + f"{startLat} {startLon} " + f"{endLat} {endLon} " + "RestrictedRed\n")
-
-                    output_file.write(
-                        (' ' * 26) +
-                        f"{startLat} {startLon} " +
-                        f"{endLat} {endLon} " +
-                        "RestrictedRed\n")
+                output_file.write(
+                    (' ' * 26) +
+                    f"{start_lat} {start_lon} " +
+                    f"{end_lat} {end_lon} " +
+                    "RestrictedRed\n")
 
 
-def convert_from_geojson(full_file_path='geojson.json'):
+def convert_from_geojson(full_file_path: str = 'geojson.json') -> None:
     """
     Convert a geojson to SCT2 File.
     Can be downloaded from: https://github.com/maiuswong/simaware-tracon-project/blob/main/TRACONBoundaries.geojson
@@ -158,7 +148,7 @@ def convert_from_geojson(full_file_path='geojson.json'):
                     all_options += (' ' * 26) + \
                                    previous + \
                                    F" {'.'.join(dd2dms(coordinate[1], False))}" \
-                                   F" {'.'.join(dd2dms(coordinate[0], True))} " +\
+                                   F" {'.'.join(dd2dms(coordinate[0], True))} " + \
                                    "RestrictedRed\n"
                 previous = F"{'.'.join(dd2dms(coordinate[1], False))} {'.'.join(dd2dms(coordinate[0], True))}"
         outFile.write(all_options)
