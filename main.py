@@ -192,5 +192,17 @@ def console_conversion():
             print("Invalid Input: {}".format(user_input))
 
 
+def run_main():
+    run = True
+    while run:
+        print("Enter your option:")
+        print("\t 1) Console Conversion")
+        user_input = input("> ").lower()
+        if user_input == 'e' or user_input == 'exit':
+            run = False
+        elif user_input == '1':
+            console_conversion()
+
+
 if __name__ == '__main__':
-    pass
+    run_main()
