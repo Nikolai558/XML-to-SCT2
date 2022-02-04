@@ -1,4 +1,5 @@
 import json
+from pyperclip import copy
 
 BLANK_COORDS = "N000.00.00.000 E000.00.00.000 N000.00.00.000 E000.00.00.000 RestrictedRed"
 
@@ -154,3 +155,42 @@ def convert_from_geojson(full_file_path: str = 'geojson.json') -> None:
         outFile.write(all_options)
 
     file.close()
+
+
+def console_conversion():
+    print("Convert Sector File Lat/Lon to Decimal")
+    print("This program will copy the result to your clipboard.")
+    print("Valid Formats are as follows: ")
+    print("\tN045.49.43.012\n\tN045.49.43.012 W108.18.35.310\n"
+          "\tN045.49.43.012 W108.18.35.310 N045.49.44.988 W108.18.38.587")
+    print("----------------------------------------------------------------")
+    while True:
+        user_input = input("> ").strip()
+
+        try:
+            if len(user_input.split(' ')) == 2:
+                first = dms2dd(user_input.split(' ')[0])
+                second = dms2dd(user_input.split(' ')[1])
+                copy(f"{first} {second}")
+                print("Copied to clipboard: ", f"{first} {second}")
+            elif len(user_input.split(' ')) == 4:
+                first = dms2dd(user_input.split(' ')[0])
+                second = dms2dd(user_input.split(' ')[1])
+                third = dms2dd(user_input.split(' ')[2])
+                fourth = dms2dd(user_input.split(' ')[3])
+                copy(f"{first} {second} {third} {fourth}")
+                print("Copied to clipboard: ", f"{first} {second} {third} {fourth}")
+            elif len(user_input.split(' ')) == 1:
+                decimal_format = dms2dd(user_input)
+                copy(decimal_format)
+                print("Copied to clipboard: ", str(decimal_format))
+            else:
+                print("Invalid Input: {}".format(user_input))
+        except IndexError:
+            print("Invalid Input: {}".format(user_input))
+        except ValueError:
+            print("Invalid Input: {}".format(user_input))
+
+
+if __name__ == '__main__':
+    pass
